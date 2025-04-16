@@ -38,3 +38,77 @@ export async function addInquiry(req, res) {
       res.status(500).json({ message: "Failed to add inquiry" });
     }
   }
+
+  //** create funtion for getting inquiries */
+export async function getInquiry(req,res)
+{
+  try {
+    if(isItCustomer(req)){
+      const inquiries = await Inquiry.find({email:req.user.email});
+      res.json(inquiries);
+      return;
+    }
+    else if (isTtAdmin(req)) {
+      const inquiries = await Inquiry.find();
+      res.json(inquiries);
+      return;
+    } else {
+      res.status(403).json({
+        message : "you are not authorized to performe this action"
+      })
+    }
+  } catch (e) {
+    res.status(500).json({
+      message : "Failed to get inquiries"
+    })
+  }
+}
+//** delete inquiry funtion  */
+export async function deleteInquiry(req,res){
+    try {
+     if(isTtAdmin(req)){
+         const id = req.params.id;
+  
+         await Inquiry.deleteOne({id:id})
+         res.json({
+          message : "Inquiry delete suucessfully"
+         })
+     }
+     else if (isItCustomer(req)) {
+          const id = req.params.id;
+         const inquiry = await Inquiry.findOne({id:id});
+  
+         if(inquiry == null){
+          res.status(403).json({
+            message : "Inquiry not found"
+          })
+          return ;
+         }
+         else{
+            if(inquiry.email == req.user.email){
+              await Inquiry.deleteOne({id:id})
+              res.json({
+                message : "Inqiry delete successfully"
+              })
+              return ;
+            }
+            else{
+              res.status(403).json({
+                message :"You are not authorized to perform this action"
+               })
+               return ;
+            }
+         }
+  
+     } else {
+       res.status(403).json({
+        message :"You are not authorized to perform this action"
+       })
+       return ;
+     }
+    } catch (e) {
+      res.status(500).json({
+        message : "Failed to delete inquiry"
+      })
+    }
+  }
