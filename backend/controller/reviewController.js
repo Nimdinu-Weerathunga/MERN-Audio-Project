@@ -30,3 +30,83 @@ export function addReview(req,res){
 
 
 } 
+
+export async function getReviews(req,res){
+    const user = req.user;
+    //** cheke  the user role   */
+   // if(user == null || user.role != "admin")
+    //{
+       //Review.find({isApproved : true}).then((reviews)=>{
+          // res.json(reviews);
+       //})
+       //return 
+    //}
+   // if(user.role == "admin")
+   // {
+       //Review.find().then((reviews)=>{
+         //  res.json(reviews);
+      // })
+   // }
+
+   //** above function replace the to async function */
+   try {
+       const reviews = await Review.find();
+       res.json(reviews);
+   } catch (error) {
+       console.log(error)
+   }
+  
+}
+
+//** create a function for delete review  */
+export function deleteReviews(req,res){
+
+    const email = req.params.email;
+   //** admin can delete all reviews,but
+   // customer can delete his's reviews */
+    if(req.user == null){
+        res.status(401).json({
+            message:" Please login and try again"
+        });
+        return 
+    }
+
+    if(req.user.role == "admin")
+    {
+        Review.deleteOne({email : email}).then(()=>{
+            res.json({
+                message : "Review deleted successfully"
+            });
+        }).catch(()=>{
+            res.status(500).json({
+                message : " Review deletion failed"
+            });
+        });
+        return 
+    }
+
+    if(req.user.role == "customer")
+    {
+       if(req.user.email == email)
+       {
+        Review.deleteOne({email : email}).then(()=>{
+            res.json({
+                message : "Review deleted successfully"
+            });
+        }).catch(()=>{
+            res.status(500).json({
+                message : " Review deletion failed"
+            });
+        });
+       }
+       else{
+        res.status(403).json({
+            message : "You are not authorized to perform this action"
+        });
+       }
+       return 
+    }
+
+
+   
+}
